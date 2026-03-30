@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pre-Test Modul 1 — CDM & PDM</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e0e12;
+    --surface: #16161d;
+    --surface2: #1e1e28;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.15);
+    --accent: #7c6fff;
+    --accent-light: #a99fff;
+    --accent-glow: rgba(124,111,255,0.25);
+    --green: #3ecf8e;
+    --green-bg: rgba(62,207,142,0.1);
+    --green-border: rgba(62,207,142,0.35);
+    --red: #f87171;
+    --red-bg: rgba(248,113,113,0.1);
+    --red-border: rgba(248,113,113,0.35);
+    --text: #f0f0f5;
+    --text-muted: #8888a0;
+    --text-faint: #55556a;
+    --font: 'Sora', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    font-family: var(--font);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem 4rem;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 660px;
+  }
+
+  /* Header */
+  .header {
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.6s ease both;
+  }
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-glow);
+    border: 1px solid rgba(124,111,255,0.3);
+    border-radius: 99px;
+    padding: 4px 14px;
+    font-size: 12px;
+    color: var(--accent-light);
+    font-family: var(--mono);
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+  }
+  .header-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.25;
+    background: linear-gradient(135deg, #fff 30%, var(--accent-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+  }
+  .header p {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* Progress */
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .progress-track {
+    flex: 1;
+    height: 3px;
+    background: var(--surface2);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light));
+    border-radius: 99px;
+    transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+  .progress-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-faint);
+    white-space: nowrap;
+    min-width: 48px;
+    text-align: right;
+  }
+
+  /* Score pill */
+  .score-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 4px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    transition: color 0.3s;
+  }
+  .score-pill span { color: var(--accent-light); font-weight: 500; }
+
+  /* Question card */
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.75rem;
+    margin-bottom: 1rem;
+    animation: fadeUp 0.5s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+  .question-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.5;
+  }
+  .q-number {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .q-text {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.6;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+  }
+
+  /* Options */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    text-align: left;
+  }
+  .opt:hover:not(:disabled) {
+    background: rgba(124,111,255,0.07);
+    border-color: rgba(124,111,255,0.3);
+    transform: translateX(2px);
+  }
+  .opt:disabled { cursor: default; }
+  .opt-key {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+  }
+  .opt-text { font-size: 14px; color: var(--text-muted); line-height: 1.5; transition: color 0.2s; }
+
+  .opt.correct { background: var(--green-bg); border-color: var(--green-border); }
+  .opt.correct .opt-key { background: var(--green); border-color: var(--green); color: #0e1a14; font-weight: 700; }
+  .opt.correct .opt-text { color: var(--green); }
+
+  .opt.wrong { background: var(--red-bg); border-color: var(--red-border); }
+  .opt.wrong .opt-key { background: var(--red); border-color: var(--red); color: #1a0e0e; font-weight: 700; }
+  .opt.wrong .opt-text { color: var(--red); }
+
+  .opt.dim { opacity: 0.4; }
+
+  /* Feedback */
+  .feedback {
+    margin-top: 1.25rem;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.7;
+    display: none;
+    animation: fadeUp 0.3s ease both;
+  }
+  .feedback.show { display: block; }
+  .feedback.ok { background: var(--green-bg); border: 1px solid var(--green-border); color: #6debb0; }
+  .feedback.ok strong { color: var(--green); }
+  .feedback.bad { background: var(--red-bg); border: 1px solid var(--red-border); color: #fca5a5; }
+  .feedback.bad strong { color: var(--red); }
+
+  /* Nav */
+  .nav-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: fadeUp 0.5s 0.1s ease both;
+  }
+  .nav-btn {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-family: var(--font);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .nav-btn:hover:not(:disabled) {
+    background: var(--surface2);
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+  .nav-btn:disabled { opacity: 0.25; cursor: default; }
+  .nav-btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  .nav-btn.primary:hover:not(:disabled) {
+    background: var(--accent-light);
+    border-color: var(--accent-light);
+    color: #0e0e12;
+  }
+
+  /* Result */
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3rem 2rem;
+    text-align: center;
+    animation: fadeUp 0.6s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+  .result-score {
+    font-size: 72px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #fff 30%, var(--accent-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .result-pct {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    margin-bottom: 12px;
+    letter-spacing: 0.05em;
+  }
+  .result-msg {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    max-width: 380px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 2rem;
+  }
+  .stat-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 10px;
+  }
+  .stat-num { font-size: 22px; font-weight: 700; color: var(--text); }
+  .stat-num.g { color: var(--green); }
+  .stat-num.r { color: var(--red); }
+  .stat-label { font-size: 11px; color: var(--text-faint); font-family: var(--mono); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .hidden { display: none !important; }
+
+  /* Review mode */
+  .review-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 10px;
+    animation: fadeUp 0.4s ease both;
+  }
+  .review-status {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .review-status.ok { color: var(--green); }
+  .review-status.bad { color: var(--red); }
+  .review-q { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 10px; line-height: 1.5; }
+  .review-answer { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+  .review-answer span.lbl { color: var(--text-faint); font-family: var(--mono); font-size: 11px; display: block; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .review-answer .av { color: var(--green); }
+  .review-answer .aw { color: var(--red); }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-badge">Praktikum Basis Data · Modul 1</div>
+    <h1>Pre-Test CDM &amp; PDM</h1>
+    <p>Uji pemahamanmu sebelum praktikum. Jawab setiap soal dengan teliti, lalu baca penjelasannya.</p>
+  </div>
+
+  <!-- Quiz area -->
+  <div id="quiz-area"></div>
+
+  <!-- Result area -->
+  <div id="result-area" class="hidden"></div>
+</div>
+
+<script>
+const questions = [
+  {
+    q: "Apa yang dimaksud dengan Conceptual Data Model (CDM)?",
+    opts: [
+      "Model yang menjelaskan detail bagaimana data disimpan secara fisik dalam DBMS",
+      "Model yang merepresentasikan pandangan pemakai terhadap data tanpa memperhatikan tipe data",
+      "Kumpulan query SQL yang digunakan untuk membuat tabel di database",
+      "Diagram yang menunjukkan relasi antar tabel beserta tipe datanya secara lengkap"
+    ],
+    ans: 1,
+    exp: "CDM (Conceptual Data Model) adalah model konseptual yang merepresentasikan pandangan pemakai terhadap data yang disimpan dalam basis data. CDM dibuat dalam bentuk tabel-tabel <em>tanpa tipe data</em>, hanya menggambarkan entitas dan relasi antar entitas (Rosa &amp; Shalahuddin, 2013)."
+  },
+  {
+    q: "Apa perbedaan utama antara CDM dan PDM?",
+    opts: [
+      "CDM menggunakan bahasa SQL, sedangkan PDM menggunakan Power Designer",
+      "CDM hanya berlaku untuk database MySQL, PDM untuk semua DBMS",
+      "CDM bersifat konseptual tanpa tipe data, PDM sudah mencantumkan tipe data dan siap diimplementasikan ke DBMS",
+      "CDM memiliki lebih banyak tabel dibandingkan PDM"
+    ],
+    ans: 2,
+    exp: "CDM bersifat konseptual dan tidak menyertakan tipe data — hanya menggambarkan entitas dan relasi. Sedangkan PDM (Physical Data Model) sudah merupakan bentuk fisik perancangan basis data dengan nama tabel asli, tipe data kolom, dan foreign key yang siap diimplementasikan ke dalam DBMS tertentu."
+  },
+  {
+    q: "Dalam CDM, apa fungsi dari notasi 'Relasi' (Relationship)?",
+    opts: [
+      "Untuk menyimpan nilai data dari sebuah entitas",
+      "Untuk mendefinisikan tipe data suatu atribut dalam tabel",
+      "Untuk menggambarkan hubungan antar entitas beserta nama relasi dan multiplicity-nya",
+      "Untuk membuat primary key pada tabel secara otomatis"
+    ],
+    ans: 2,
+    exp: "Dalam CDM, Relasi (Relationship) digunakan untuk menggambarkan hubungan antar entitas. Relasi terdiri dari <strong>nama relasi</strong> dan <strong>multiplicity</strong> (misal: one-to-many, many-to-many), yang menunjukkan berapa banyak instance suatu entitas dapat berhubungan dengan entitas lainnya."
+  },
+  {
+    q: "Pada PDM, apa yang dimaksud dengan Foreign Key?",
+    opts: [
+      "Kunci utama (primary key) dari sebuah tabel yang bersifat unik",
+      "Kolom yang nilainya merujuk pada primary key tabel lain untuk menyatakan relasi antar tabel",
+      "Atribut yang diperbolehkan bernilai kosong (NULL) dalam tabel",
+      "Nama tabel yang digunakan sebagai referensi dalam DBMS"
+    ],
+    ans: 1,
+    exp: "Foreign Key (FK) adalah kolom pada suatu tabel yang nilainya mengacu pada primary key tabel lain. Dalam PDM, relasi antar tabel dinyatakan dengan persamaan antara primary key tabel asal dan foreign key di tabel yang merujuk, contoh: <code>id_tbl1 = id_fk_tbl2</code>."
+  },
+  {
+    q: "Mengapa perlu melakukan Check Model (F4) setelah membuat CDM di Power Designer?",
+    opts: [
+      "Untuk mengubah CDM menjadi query SQL secara langsung dan otomatis",
+      "Untuk memastikan tidak ada error atau warning pada model sebelum dikonversi ke PDM",
+      "Untuk menambahkan entitas baru ke dalam CDM yang sudah ada",
+      "Untuk menyimpan file CDM secara permanen ke dalam database"
+    ],
+    ans: 1,
+    exp: "Proses Check Model dilakukan untuk memvalidasi apakah CDM yang dibuat sudah benar secara teknis. Jika hasil pengecekan menunjukkan <strong>0 error dan 0 warning</strong>, maka CDM tidak memiliki masalah dan siap dikonversi menjadi PDM. Ini penting agar PDM yang dihasilkan juga valid."
+  },
+  {
+    q: "Software apa yang digunakan pada praktikum Modul 1 untuk membuat CDM dan PDM?",
+    opts: [
+      "MySQL Workbench",
+      "Microsoft Visio",
+      "Power Designer",
+      "Draw.io"
+    ],
+    ans: 2,
+    exp: "Pada praktikum Modul 1 digunakan software <strong>Power Designer</strong>. Power Designer mendukung pembuatan model data konseptual (CDM), logikal, dan fisik (PDM), serta dapat menghasilkan script SQL dari PDM secara otomatis melalui menu <em>Database → Generate Database</em>."
+  }
+];
+
+const KEYS = ['A','B','C','D'];
+let current = 0, score = 0, answered = [];
+
+const quizArea = document.getElementById('quiz-area');
+const resultArea = document.getElementById('result-area');
+
+function render() {
+  if (current >= questions.length) { showResult(); return; }
+  const q = questions[current];
+  const isAnswered = answered[current] !== undefined;
+  const pct = (current / questions.length * 100).toFixed(0);
+
+  quizArea.innerHTML = `
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="progress-label">${current + 1} / ${questions.length}</div>
+    </div>
+
+    <div class="question-card">
+      <div class="q-number">Soal ${current + 1} &nbsp;·&nbsp; Pre-Test Modul 1</div>
+      <div class="q-text">${q.q}</div>
+      <div class="options">
+        ${q.opts.map((o, i) => {
+          let cls = 'opt';
+          if (isAnswered) {
+            if (i === q.ans) cls += ' correct';
+            else if (i === answered[current]) cls += ' wrong';
+            else cls += ' dim';
+          }
+          return `<button class="${cls}" onclick="pick(${i})" ${isAnswered ? 'disabled' : ''}>
+            <span class="opt-key">${isAnswered && i === q.ans ? '✓' : isAnswered && i === answered[current] ? '✗' : KEYS[i]}</span>
+            <span class="opt-text">${o}</span>
+          </button>`;
+        }).join('')}
+      </div>
+      ${isAnswered ? `
+        <div class="feedback ${answered[current] === q.ans ? 'ok' : 'bad'} show">
+          <strong>${answered[current] === q.ans ? '✓ Jawaban benar!' : '✗ Jawaban kurang tepat.'}</strong><br>${q.exp}
+        </div>` : ''}
+    </div>
+
+    <div class="nav-row">
+      <button class="nav-btn" onclick="go(-1)" ${current === 0 ? 'disabled' : ''}>← Kembali</button>
+      <div class="score-pill">Skor&nbsp;<span>${score}</span>&nbsp;/&nbsp;${questions.length}</div>
+      <button class="nav-btn ${isAnswered ? 'primary' : ''}" onclick="go(1)" ${!isAnswered ? 'disabled' : ''}>
+        ${current === questions.length - 1 ? 'Lihat Hasil →' : 'Lanjut →'}
+      </button>
+    </div>
+  `;
+}
+
+function pick(i) {
+  if (answered[current] !== undefined) return;
+  answered[current] = i;
+  if (i === questions[current].ans) score++;
+  render();
+}
+
+function go(dir) {
+  current = Math.max(0, Math.min(questions.length, current + dir));
+  render();
+}
+
+function showResult() {
+  quizArea.innerHTML = '';
+  resultArea.classList.remove('hidden');
+  const pct = Math.round(score / questions.length * 100);
+  const wrong = questions.length - score;
+  let msg = pct >= 85 ? 'Luar biasa! Pemahamanmu tentang CDM dan PDM sangat baik. Siap untuk praktikum!'
+    : pct >= 60 ? 'Cukup baik! Ada beberapa konsep yang perlu dipelajari kembali sebelum praktikum.'
+    : 'Jangan menyerah! Baca kembali materi CDM dan PDM, lalu coba lagi.';
+
+  const reviewHtml = questions.map((q, i) => {
+    const isOk = answered[i] === q.ans;
+    return `<div class="review-item">
+      <div class="review-status ${isOk ? 'ok' : 'bad'}">${isOk ? '✓ Benar' : '✗ Salah'} — Soal ${i+1}</div>
+      <div class="review-q">${q.q}</div>
+      <div class="review-answer">
+        ${!isOk ? `<span class="lbl">Jawaban kamu</span><span class="aw">${q.opts[answered[i]]}</span><br>` : ''}
+        <span class="lbl">Jawaban benar</span><span class="av">${q.opts[q.ans]}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  resultArea.innerHTML = `
+    <div class="result-card" style="margin-bottom:1.5rem;">
+      <div class="result-score">${score}/${questions.length}</div>
+      <div class="result-pct">${pct}% Benar</div>
+      <div class="result-msg">${msg}</div>
+      <div class="result-grid">
+        <div class="stat-box"><div class="stat-num">${questions.length}</div><div class="stat-label">Total Soal</div></div>
+        <div class="stat-box"><div class="stat-num g">${score}</div><div class="stat-label">Benar</div></div>
+        <div class="stat-box"><div class="stat-num r">${wrong}</div><div class="stat-label">Salah</div></div>
+      </div>
+      <button class="nav-btn primary" style="width:100%;padding:12px;" onclick="restart()">Ulangi Quiz dari Awal</button>
+    </div>
+
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text-faint);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;">
+      Ringkasan Jawaban
+    </div>
+    ${reviewHtml}
+  `;
+}
+
+function restart() {
+  current = 0; score = 0; answered = [];
+  resultArea.classList.add('hidden');
+  resultArea.innerHTML = '';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
